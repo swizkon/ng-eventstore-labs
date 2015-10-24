@@ -3,8 +3,29 @@
 <html>
 <body>
 	
+	<div id="users">#users</div>
 	
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.js">
 </script>
+
+<script type="text/javascript">
+
+$(document).ready(function(){
+	
+	// $.getJSON("http://localhost:2113/projection/activeusers", function(data){
+	// 	console.log(data);
+	// 	$("#users").html(JSON.stringify(data));
+	// });
+	
+	$.getJSON("http://localhost:2113/projection/activeusers/result", function(data){
+		console.log(data);
+		$("#users").html(JSON.stringify(data));
+	});
+});
+
+
+</script>
+
+
 </body>
 </html>
