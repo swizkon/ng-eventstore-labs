@@ -99,15 +99,17 @@
 			
 			
 			$("#deactivatedusers").html($.map(data.deactivatedUsers, function(n,i){
-				var deactivatedOne = "<div class=\"active-user\"><h3>" + n.username + "</h3>"
-					+ "<button class=\"reactivation-button btn btn-default\">Re-activate " + n["username"] + "</button></div>";
+				var deactivatedOne = "<div class=\"active-user\">"
+					// + "<h3>" + n.username + "</h3>"
+					+ "<h3>" + n.displayName + " <small>" + n.username + "</small></h3>"
+					+ "<button class=\"reactivation-button btn btn-default\">Re-activate</button></div>";
 					return deactivatedOne;
 			}));
 	
 			$("button.reactivation-button").click(function(event){
 				var sender = $(this);
 				var formProps = {
-					"username": sender.closest("div").find("h3").text()
+					"username": sender.closest("div").find("small").text()
 				};
 				
 				eventstore.appendToStream("users", 
