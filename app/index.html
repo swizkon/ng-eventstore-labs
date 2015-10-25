@@ -1,26 +1,167 @@
 <!DOCTYPE html>
-
 <html>
+<head>
+
+    <link rel="stylesheet" href="https://bootswatch.com/slate/bootstrap.css" />
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" />
+</head>
 <body>
+    <header>
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-10 col-sm-offset-1">
+                    <h1>User management <small>- EventStore labs</small></h1>
+                    <hr/>
+                </div>
+            </div>
+        </div>
+    </header>
+
 	
-	<div id="users">#users</div>
+	<section>
+	        <div class="container">
+	            <div class="row">
+	                <div class="col-sm-10 col-sm-offset-1">
+						<h2>Create new user</h2>
+						<form id="createuserform">
+						<fieldset>
+							<legend>Create new user</legend>
+							
+							<input id="username" name="username" type="text" class="form-control" placeholder="username" />
+							<input id="displayName" name="displayName" type="text" class="form-control" placeholder="displayName" />
+							<input type="submit" />
+						</fieldset>
+						</form>
+	                </div>
+	            </div>
+	        </div>
+			<hr/>
+	    </section>
 	
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.js">
-</script>
+	<section>
+	        <div class="container">
+	            <div class="row">
+	                <div class="col-sm-5 col-sm-offset-1">
+						<h2>Active users</h2>
+						<div id="users">#users</div>
+	                </div>
+	                <div class="col-sm-5 col-sm-offset-1">
+						<h2>Deactivated users</h2>
+						<div id="deactivatedusers">#deactivatedusers</div>
+	                </div>
+	            </div>
+	        </div>
+	    </section>
+		
+	
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.js">
+	</script>
+	
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/4.0.6/rx.all.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.3/handlebars.js"></script>
+    
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/components/core-min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/components/sha256.js"></script>
+
+	
+	
+	<script src="users/services.js"></script>
+	<script src="users/controller.js"></script>
 
 <script type="text/javascript">
+	
+	var loadUsers = function() {
+	
+		$.getJSON("http://localhost:2113/projection/activeusers/result", function(data){
+			// console.log(data);
+			
+			$("#users").html($.map(data.activeUsers, function(n,i){
+				var activeOne = "<div class=\"active-user\"><h3>" + n.displayName 
+							+ " <small>" + n.username + "</small></h3>"
+						+ "<button class=\"deactivation-button btn btn-default\">Deactivate " + n["username"] + "</button></div>";
+				return activeOne;
+			}));
+	
+			$("button.deactivation-button").click(function(event){
+				var sender = $(this);
+				var formProps = {
+					"username": sender.closest("div").find("small").text()
+				};
+				
+				eventstore.appendToStream("users", 
+					"userDeactivated", 
+					formProps, function(response){
+						loadUsers();
+				});
+		
+				event.preventDefault();
+			});
+			
+			
+			$("#deactivatedusers").html($.map(data.deactivatedUsers, function(n,i){
+				var deactivatedOne = "<div class=\"active-user\"><h3>" + n.username + "</h3>"
+					+ "<button class=\"reactivation-button btn btn-default\">Re-activate " + n["username"] + "</button></div>";
+					return deactivatedOne;
+			}));
+	
+			$("button.reactivation-button").click(function(event){
+				var sender = $(this);
+				var formProps = {
+					"username": sender.closest("div").find("h3").text()
+				};
+				
+				eventstore.appendToStream("users", 
+					"userReactivated", 
+					formProps, function(response){
+						loadUsers();
+				});
+		
+				event.preventDefault();
+			});
+			
+			// $("#users").html(JSON.stringify(data));
+		});
+	};
 
 $(document).ready(function(){
+	
+
+	loadUsers();
+	
+	$("#createuserform").submit(function(event){
+		
+		var formProps = {};
+		var frm = $("#createuserform");
+		$.map(frm.serializeArray(), function( n, i ) {
+		  formProps[n["name"]] = n["value"];
+		});
+		
+		 eventstore.appendToStream("users", 
+			"userCreated", 
+			formProps, function(response){
+				loadUsers();
+				// console.log(response);
+		});
+		
+		event.preventDefault();
+	});
 	
 	// $.getJSON("http://localhost:2113/projection/activeusers", function(data){
 	// 	console.log(data);
 	// 	$("#users").html(JSON.stringify(data));
 	// });
 	
-	$.getJSON("http://localhost:2113/projection/activeusers/result", function(data){
-		console.log(data);
-		$("#users").html(JSON.stringify(data));
-	});
+	/*
+	eventstore.appendToStream("users", 
+			"userCreated", 
+			{
+ 			   "displayName": "Signe Jerndin",
+ 			   "fullName": "Signe Alice Jerndin",
+ 			   "username": "signe"
+			}, function(response){
+				console.log(response);
+			});
+			*/
 });
 
 
