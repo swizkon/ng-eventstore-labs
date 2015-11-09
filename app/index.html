@@ -35,7 +35,7 @@
 	                </div>
 	            </div>
 	        </div>
-			<hr/>
+			<hr/> 
 	    </section>
 	
 	<section>
@@ -84,16 +84,26 @@
 	
 			$("button.deactivation-button").click(function(event){
 				var sender = $(this);
+				var username = sender.closest("div").find("small").text();
+				
+				
+				DailyOps.events.userDeactivated(username).then(
+					loadUsers
+					,function(response){
+						console.log("Where in the promise.then");
+						loadUsers();
+				});
+				
+				/*
 				var formProps = {
 					"username": sender.closest("div").find("small").text()
 				};
-				
 				eventstore.appendToStream("users", 
 					"userDeactivated", 
 					formProps, function(response){
 						loadUsers();
 				});
-		
+				*/
 				event.preventDefault();
 			});
 			
@@ -108,6 +118,12 @@
 	
 			$("button.reactivation-button").click(function(event){
 				var sender = $(this);
+
+				var username = sender.closest("div").find("small").text();
+				
+				
+				DailyOps.events.userReactivated(username).then(loadUsers);
+				/*
 				var formProps = {
 					"username": sender.closest("div").find("small").text()
 				};
@@ -117,6 +133,7 @@
 					formProps, function(response){
 						loadUsers();
 				});
+				*/
 		
 				event.preventDefault();
 			});
@@ -140,9 +157,9 @@ $(document).ready(function(){
 		
 		 eventstore.appendToStream("users", 
 			"userCreated", 
-			formProps, function(response){
+			formProps, 
+			function(response){
 				loadUsers();
-				// console.log(response);
 		});
 		
 		event.preventDefault();

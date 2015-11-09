@@ -9,8 +9,11 @@ function generateUUID() {
 };
 
 var eventstore = {
+
+  	host: "http://localhost",
+	  port: "2113",
   	
-	  appendToStream: function(streamName, eventType, eventBody, callback){
+	  appendToStream: function(streamName, eventType, eventBody){ // , callback
 		  var eventData = [
 			  {
 			      "eventId": generateUUID(),
@@ -18,12 +21,36 @@ var eventstore = {
 			      "data": eventBody
 			  }
 		  ];
-		  $.ajax({
-		      url: "http://localhost:2113/streams/" + streamName,
+		  return $.ajax({
+		      url: eventstore.host + ":" + eventstore.port + "/streams/" + streamName,
 		      type: "POST",
 		      data: JSON.stringify(eventData),
-		      contentType: "application/vnd.eventstore.event+json",
-		      complete: callback
+		      contentType: "application/vnd.eventstore.event+json"
+			  // , complete: callback
 		  });
 	  }
-  };
+};
+
+var DailyOps = window['DailyOps'] || {};
+DailyOps.events = (function() {
+	
+	return {
+		userCreated: function(username) {
+			return true;
+		},
+		userDeactivated: function(username) {
+			// Return a promise
+			var formProps = {
+				"username": username || ""
+			};
+			return eventstore.appendToStream("users", "userDeactivated", formProps);
+		},
+		userReactivated: function(username) {
+			// Return a promise
+			var formProps = {
+				"username": username || ""
+			};
+			return eventstore.appendToStream("users", "userReactivated", formProps);
+		}
+	};
+})();
